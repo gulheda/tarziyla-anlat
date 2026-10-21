@@ -1,0 +1,43 @@
+name: Web sürümünü Netlify'a yayınla
+
+# main dalına her yükleme yapıldığında web sürümünü derler ve Netlify'a gönderir.
+# Çalışması için repo ayarlarında iki gizli değer tanımlı olmalı:
+#   NETLIFY_AUTH_TOKEN  (Netlify > User settings > Applications > Personal access tokens)
+#   NETLIFY_SITE_ID     (Netlify > Site configuration > Site ID)
+# Bu değerler yoksa akış hata vermez, yayınlamayı atlar.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+      NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Netlify bilgileri yoksa atla
+        if: env.NETLIFY_AUTH_TOKEN == '' || env.NETLIFY_SITE_ID == ''
+        run: echo "NETLIFY_AUTH_TOKEN ya da NETLIFY_SITE_ID tanımlı değil, yayınlama atlandı."
+
+      - uses: subosito/flutter-action@v2
+        if: env.NETLIFY_AUTH_TOKEN != '' && env.NETLIFY_SITE_ID != ''
+        with:
+          channel: stable
+          flutter-version: 3.47.7
+          cache: true
+
+      - name: Test ve derleme
+        if: env.NETLIFY_AUTH_TOKEN != '' && env.NETLIFY_SITE_ID != ''
+        run: |
+          flutter pub get
+          flutter test
+          flutter build web --release
+
+      - name: Netlify'a gönder
+        if: env.NETLIFY_AUTH_TOKEN != '' && env.NETLIFY_SITE_ID != ''
+        run: npx --yes netlify-cli@latest deploy --dir=build/web --prod --site "$NETLIFY_SITE_ID" --auth "$NETLIFY_AUTH_TOKEN"

@@ -5,6 +5,10 @@ Konuyu çek, tarzı çek, kelimeyi söylemeden anlat! Arkadaşların tahmin etsi
 **Canlı demo:** https://guileless-pithivier-46ef21.netlify.app
 (Telefonda açıp "Ana Ekrana Ekle" dersen uygulama gibi çalışır. iPhone'da Safari, Android'de Chrome.)
 
+## İndir
+- **Android:** [Son sürümü indir (APK)](https://github.com/gulheda/tarziyla-anlat/releases/latest). Dosyayı açıp "bilinmeyen kaynaklardan yükle" izni vermen gerekir.
+- **iPhone ve diğerleri:** Yukarıdaki canlı demo bağlantısını Safari ya da Chrome'da aç, "Ana Ekrana Ekle" de.
+
 ## Nasıl oynanır
 1. Sırası gelen oyuncu telefonu alır.
 2. İki kart çıkar: **KONU** ne anlatılacağını, **TARZ** nasıl anlatılacağını söyler.
@@ -46,3 +50,12 @@ flutter build ipa            # iPhone (Apple Developer hesabı gerekir)
 
 ## Yayın
 Mağaza metinleri ve adım adım kontrol listesi için [store/YAYIN_KONTROL_LISTESI.md](store/YAYIN_KONTROL_LISTESI.md) dosyasına bak.
+
+## Web'i otomatik yayınlamak
+`.github/workflows/deploy-web.yml`, `main` dalına her yüklemede web sürümünü derleyip Netlify'a gönderir. Çalışması için repo ayarlarında iki gizli değer tanımlanmalı:
+
+```
+gh secret set NETLIFY_AUTH_TOKEN
+gh secret set NETLIFY_SITE_ID
+```
+Token'ı Netlify'da *User settings > Applications > Personal access tokens* bölümünden, site kimliğini *Site configuration > Site ID* alanından alırsın. Bu değerler yoksa akış yayınlamayı atlar.
