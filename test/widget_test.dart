@@ -28,14 +28,21 @@ void main() {
       expect(card.trim(), isNotEmpty);
       expect(card.length, lessThanOrEqualTo(80), reason: card);
     }
+    for (final card in all) {
+      expect(
+        card.contains(RegExp(r'\s')),
+        isFalse,
+        reason: 'tek kelime olmalı: $card',
+      );
+    }
     for (final c in anlatCategories) {
-      expect(c.cards.length, greaterThanOrEqualTo(40), reason: c.id);
+      expect(c.cards.length, greaterThanOrEqualTo(25), reason: c.id);
     }
   });
 
   test('paket seçimi yalnızca seçilen temanın kartlarını çıkarır', () {
-    final pool = anlatPool(['genz']);
-    final genz = anlatCategories.firstWhere((c) => c.id == 'genz').cards;
+    final pool = anlatPool(['hayvan']);
+    final genz = anlatCategories.firstWhere((c) => c.id == 'hayvan').cards;
     expect(pool, genz);
     final g =
         Game(
@@ -44,7 +51,7 @@ void main() {
               names: ['A', 'B'],
               rounds: 1,
               seconds: 30,
-              categoryIds: ['genz'],
+              categoryIds: ['hayvan'],
             ),
           )
           ..confirmHandover()

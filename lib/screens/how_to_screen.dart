@@ -18,8 +18,8 @@ class HowToScreen extends StatelessWidget {
       (
         '🃏',
         'İki kart çek',
-        'KONU kartı ne anlatacağını, TARZ kartı nasıl anlatacağını söyler. '
-            'Örneğin "Bayat Simit" + "Hamlet gibi, dramatik anlat".',
+        'KELİME kartı ne anlatacağını, TARZ kartı nasıl anlatacağını söyler. '
+            'Örneğin "Penguen" + "Hamlet gibi, dramatik anlat".',
         [AppColors.blue, AppColors.cyan],
       ),
       (

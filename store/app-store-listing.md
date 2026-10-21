@@ -6,10 +6,10 @@ App Store Connect'e bu alanları kopyalayıp yapıştırabilirsin. Parantez içi
 Tarzıyla Anlat
 
 ## Alt başlık (30)
-Konuyu çek, tarzı çek, güldür
+Kelimeyi çek, tarzı çek, güldür
 
 ## Tanıtım metni (170)
-Konu kartını çek, tarz kartını çek, kelimeyi söylemeden anlat! Arkadaşların tahmin etsin, kahkaha garanti.
+Kelime kartını çek, tarz kartını çek, kelimeyi söylemeden anlat! Arkadaşların tahmin etsin, kahkaha garanti.
 
 ## Anahtar kelimeler (100, virgülle, boşluksuz)
 parti oyunu,arkadaş,anlatma,tahmin,kart oyunu,eğlence,komik,grup oyunu,sessiz sinema,mim,gençlik
@@ -21,8 +21,8 @@ Tarzıyla Anlat, arkadaş ortamının en komik kart oyunu!
 
 Nasıl oynanır?
 • Sırası gelen oyuncu telefonu alır.
-• İki kart çıkar: KONU ne anlatacağını, TARZ nasıl anlatacağını söyler.
-• Örneğin "Bayat Simit" konusunu "Hamlet gibi, dramatik" anlatmaya çalış!
+• İki kart çıkar: KELİME ne anlatacağını, TARZ nasıl anlatacağını söyler.
+• Örneğin "Penguen" kelimesini "Hamlet gibi, dramatik" anlatmaya çalış!
 • Diğerleri kelimeyi tahmin eder. Sen kelimeyi söylersen oyun biter.
 
 İki oyun modu
@@ -30,8 +30,8 @@ Nasıl oynanır?
 • Rekabetçi: Takımlar sayaca karşı yarışır. Süre bitene kadar bildiğin kadar kart anlat, her doğru bir puan.
 
 Neden eğlenceli?
-• 500'den fazla kolay konu ve 200'den fazla tarz kartı, 100.000'den fazla farklı kombinasyon.
-• Konular günlük hayattan, sosyal medyadan, okuldan, yemekten, aşktan ve eğlenceden. Hepsi karışık gelir, anlatması kolaydır.
+• 600'den fazla tek kelime ve 200'den fazla tarz kartı, 100.000'den fazla farklı kombinasyon.
+• Hayvanlardan mesleklere, yiyeceklerden teknolojiye her türden kelime karışık gelir. Ne çok kolay, ne çok zor.
 • 2 ile 8 oyuncu ya da takım.
 • Süreyi (30, 60 ya da 90 saniye) ve tur sayısını sen belirlersin.
 • Sonuç ekranında konfeti, podyum ve esprili yorumlar seni bekliyor.
@@ -70,4 +70,4 @@ Gerekli boyut: 6,9 inç iPhone (1320 x 2868). Önerilen sıra:
 5. Podyum ve konfeti
 
 ## Telif ve marka notu
-Mağaza metinlerinde "Gibi Anlat" ya da başka bir oyunun adını kullanma. Uygulamadaki kart etiketleri bilerek "KONU" ve "TARZ" olarak seçildi.
+Mağaza metinlerinde "Gibi Anlat" ya da başka bir oyunun adını kullanma. Uygulamadaki kart etiketleri bilerek "KELİME" ve "TARZ" olarak seçildi.

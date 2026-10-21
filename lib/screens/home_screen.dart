@@ -136,7 +136,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           ),
                         ),
                         child: Text(
-                          '🃏 $totalAnlatCount konu · ${tarzCards.length} tarz',
+                          '🃏 $totalAnlatCount kelime · ${tarzCards.length} tarz',
                           style: AppText.display(14, color: AppColors.yellow),
                         ),
                       ),

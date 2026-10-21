@@ -310,7 +310,7 @@ class _ReadyState extends State<_Ready> with SingleTickerProviderStateMixin {
                               width: 210,
                               height: 140,
                               child: GameCard(
-                                label: 'KONU',
+                                label: 'KELİME',
                                 text: '?',
                                 textSize: 64,
                                 icon: Icons.record_voice_over,
@@ -508,7 +508,7 @@ class _Playing extends StatelessWidget {
                       child: _FlipSwitcher(
                         id: game.current.konu,
                         child: GameCard(
-                          label: 'KONU',
+                          label: 'KELİME',
                           text: game.current.konu,
                           icon: Icons.record_voice_over,
                           colors: pickGradient(
