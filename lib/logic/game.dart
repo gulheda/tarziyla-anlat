@@ -8,7 +8,7 @@ import '../data/funny.dart';
 
 enum GameMode { classic, competitive }
 
-enum Phase { handover, ready, playing, result, finished }
+enum Phase { handover, playing, result, finished }
 
 class CardPair {
   const CardPair(this.konu, this.tarz);
@@ -118,12 +118,7 @@ class Game extends ChangeNotifier {
     readyLine = _pick(readyLines);
   }
 
-  /// Telefon anlatıcıya verildi; kartlar henüz gösterilmiyor.
-  void confirmHandover() {
-    phase = Phase.ready;
-    notifyListeners();
-  }
-
+  /// Telefon anlatıcıdayken tek dokunuşla (geri sayımdan sonra) tur başlar.
   void startTurn() {
     turnCorrect.clear();
     classicSolved = false;

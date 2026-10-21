@@ -44,18 +44,15 @@ void main() {
     final pool = anlatPool(['hayvan']);
     final genz = anlatCategories.firstWhere((c) => c.id == 'hayvan').cards;
     expect(pool, genz);
-    final g =
-        Game(
-            GameConfig(
-              mode: GameMode.competitive,
-              names: ['A', 'B'],
-              rounds: 1,
-              seconds: 30,
-              categoryIds: ['hayvan'],
-            ),
-          )
-          ..confirmHandover()
-          ..startTurn();
+    final g = Game(
+      GameConfig(
+        mode: GameMode.competitive,
+        names: ['A', 'B'],
+        rounds: 1,
+        seconds: 30,
+        categoryIds: ['hayvan'],
+      ),
+    )..startTurn();
     for (var i = 0; i < 100; i++) {
       expect(genz, contains(g.current.konu));
       g.markCorrect();
@@ -64,9 +61,7 @@ void main() {
   });
 
   test('rekabetçi: her doğru bir puan, pas hakkı biter', () {
-    final g = _game(GameMode.competitive)
-      ..confirmHandover()
-      ..startTurn();
+    final g = _game(GameMode.competitive)..startTurn();
     g.markCorrect();
     g.markCorrect();
     expect(g.currentPlayer.score, 2);
@@ -82,9 +77,7 @@ void main() {
   });
 
   test('süre dolunca tur sonuca geçer ve oyun biter', () {
-    final g = _game(GameMode.competitive)
-      ..confirmHandover()
-      ..startTurn();
+    final g = _game(GameMode.competitive)..startTurn();
     for (var i = 0; i < 30; i++) {
       g.tick();
     }
@@ -93,7 +86,6 @@ void main() {
     expect(g.phase, Phase.handover);
     expect(g.currentIndex, 1);
     g
-      ..confirmHandover()
       ..startTurn()
       ..endTurnEarly()
       ..nextTurn();
@@ -102,9 +94,7 @@ void main() {
   });
 
   test('klasik: bilen ve anlatıcı birer puan alır, kendine puan verilemez', () {
-    final g = _game(GameMode.classic, names: ['A', 'B', 'C'])
-      ..confirmHandover()
-      ..startTurn();
+    final g = _game(GameMode.classic, names: ['A', 'B', 'C'])..startTurn();
     g.markCorrect();
     expect(g.phase, Phase.result);
     g.awardClassic(0);

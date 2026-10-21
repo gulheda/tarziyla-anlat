@@ -22,7 +22,7 @@ Tarzıyla Anlat, arkadaş ortamının en komik kart oyunu!
 Nasıl oynanır?
 • Sırası gelen oyuncu telefonu alır.
 • İki kart çıkar: KELİME ne anlatacağını, TARZ nasıl anlatacağını söyler.
-• Örneğin "Penguen" kelimesini "Hamlet gibi, dramatik" anlatmaya çalış!
+• Örneğin "Penguen" kelimesini "Nenen gibi konuş" tarzında anlatmaya çalış!
 • Diğerleri kelimeyi tahmin eder. Sen kelimeyi söylersen oyun biter.
 
 İki oyun modu

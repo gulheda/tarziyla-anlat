@@ -14,6 +14,7 @@ Kelimeyi çek, tarzı çek, kelimeyi söylemeden anlat! Arkadaşların tahmin et
 2. İki kart çıkar: **KELİME** ne anlatılacağını, **TARZ** nasıl anlatılacağını söyler.
 3. Anlatıcı kelimeyi söylemeden o tarzda anlatır, diğerleri tahmin eder.
 4. Kartı sağa kaydırmak "Bildiler", sola kaydırmak "Pas" demektir.
+5. Tur başına tek dokunuş: sonuç ekranındaki "Sıradaki" düğmesi geri sayımı başlatır.
 
 ## Modlar
 - **Klasik:** Rahat parti modu. Kelimeyi bilen ve anlatan birer puan alır.
@@ -22,7 +23,7 @@ Kelimeyi çek, tarzı çek, kelimeyi söylemeden anlat! Arkadaşların tahmin et
 2 ile 8 oyuncu ya da takım, 30/60/90 saniye, 1 ile 10 tur. Hesap ve internet gerekmez, hiçbir veri toplanmaz.
 
 ## İçerik
-621 tek kelime ve 210 tarz kartı, hepsi özgün ve karışık gelir. Kartlar [lib/data/cards.dart](lib/data/cards.dart), oyun içi espriler [lib/data/funny.dart](lib/data/funny.dart) dosyasında. Yeni kart eklemek için ilgili listeye bir satır eklemek yeterli.
+621 tek kelime ve 219 tarz kartı, hepsi özgün ve karışık gelir. Kartlar [lib/data/cards.dart](lib/data/cards.dart), oyun içi espriler [lib/data/funny.dart](lib/data/funny.dart) dosyasında. Yeni kart eklemek için ilgili listeye bir satır eklemek yeterli.
 
 ## Çalıştırmak için
 [Flutter](https://docs.flutter.dev/get-started/install) kurulu olmalı.

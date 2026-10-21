@@ -8,9 +8,6 @@ import '../logic/game.dart';
 import '../ui/theme.dart';
 import '../ui/widgets.dart';
 
-const _anlatColors = [AppColors.pink, AppColors.orange];
-const _gibiColors = [AppColors.blue, AppColors.cyan];
-
 class GameScreen extends StatefulWidget {
   const GameScreen({super.key, required this.game});
 
@@ -99,7 +96,6 @@ class _GameScreenState extends State<GameScreen> {
                 key: ValueKey(game.phase),
                 child: switch (game.phase) {
                   Phase.handover => _Handover(game: game),
-                  Phase.ready => _Ready(game: game),
                   Phase.playing => _Playing(game: game),
                   Phase.result => _Result(game: game),
                   Phase.finished => _Finished(game: game),
@@ -162,105 +158,31 @@ class _ScoreStrip extends StatelessWidget {
   }
 }
 
-class _Handover extends StatelessWidget {
+class _Handover extends StatefulWidget {
   const _Handover({required this.game});
 
   final Game game;
 
   @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Center(
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Text(
-              'TUR ${game.round} / ${game.config.rounds}',
-              style: AppText.display(
-                14,
-                letterSpacing: 3,
-                color: Colors.white70,
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(height: 16),
-        _ScoreStrip(game: game),
-        const Spacer(),
-        Center(
-          child: TweenAnimationBuilder<double>(
-            key: ValueKey(game.turnIndex),
-            tween: Tween(begin: 0.6, end: 1),
-            duration: const Duration(milliseconds: 600),
-            curve: Curves.elasticOut,
-            builder: (context, scale, child) =>
-                Transform.scale(scale: scale, child: child),
-            child: Avatar(
-              emoji: game.currentPlayer.emoji,
-              size: 130,
-              glow: true,
-            ),
-          ),
-        ),
-        const SizedBox(height: 22),
-        Text(
-          game.currentPlayer.name,
-          textAlign: TextAlign.center,
-          style: AppText.display(
-            46,
-            shadows: const [
-              Shadow(color: AppColors.pink, offset: Offset(0, 4)),
-            ],
-          ),
-        ),
-        const SizedBox(height: 12),
-        Text(
-          game.handoverLine,
-          textAlign: TextAlign.center,
-          style: const TextStyle(
-            color: Colors.white70,
-            fontSize: 17,
-            height: 1.35,
-          ),
-        ),
-        const Spacer(),
-        BigButton(
-          label: 'Telefon bende',
-          icon: Icons.front_hand,
-          onPressed: game.confirmHandover,
-        ),
-      ],
-    );
-  }
+  State<_Handover> createState() => _HandoverState();
 }
 
-class _Ready extends StatefulWidget {
-  const _Ready({required this.game});
-
-  final Game game;
-
-  @override
-  State<_Ready> createState() => _ReadyState();
-}
-
-class _ReadyState extends State<_Ready> with SingleTickerProviderStateMixin {
+class _HandoverState extends State<_Handover> {
   int? _count;
   Timer? _timer;
 
-  late final AnimationController _float = AnimationController(
-    vsync: this,
-    duration: const Duration(seconds: 3),
-  )..repeat(reverse: true);
+  @override
+  void initState() {
+    super.initState();
+    // Önceki ekranda zaten bastın; geri sayım ek dokunuş istemeden başlar.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _begin();
+    });
+  }
 
   @override
   void dispose() {
     _timer?.cancel();
-    _float.dispose();
     super.dispose();
   }
 
@@ -287,69 +209,63 @@ class _ReadyState extends State<_Ready> with SingleTickerProviderStateMixin {
     return Stack(
       children: [
         AnimatedOpacity(
-          opacity: _count == null ? 1 : 0.1,
+          opacity: 0.35,
           duration: const Duration(milliseconds: 250),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Spacer(),
-              SizedBox(
-                height: 310,
-                child: AnimatedBuilder(
-                  animation: _float,
-                  builder: (context, _) {
-                    final bob = sin(_float.value * pi) * 9;
-                    return Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        Transform.translate(
-                          offset: Offset(-30, -62 + bob),
-                          child: Transform.rotate(
-                            angle: -0.12,
-                            child: const SizedBox(
-                              width: 210,
-                              height: 140,
-                              child: GameCard(
-                                label: 'KELİME',
-                                text: '?',
-                                textSize: 64,
-                                icon: Icons.record_voice_over,
-                                colors: _anlatColors,
-                              ),
-                            ),
-                          ),
-                        ),
-                        Transform.translate(
-                          offset: Offset(30, 62 - bob),
-                          child: Transform.rotate(
-                            angle: 0.1,
-                            child: const SizedBox(
-                              width: 210,
-                              height: 140,
-                              child: GameCard(
-                                label: 'TARZ',
-                                text: '?',
-                                textSize: 64,
-                                icon: Icons.theater_comedy,
-                                colors: _gibiColors,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    );
-                  },
+              Center(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    'TUR ${game.round} / ${game.config.rounds}',
+                    style: AppText.display(
+                      14,
+                      letterSpacing: 3,
+                      color: Colors.white70,
+                    ),
+                  ),
                 ),
               ),
-              const SizedBox(height: 14),
-              Text(
-                '${game.currentPlayer.name}, hazır mısın?',
-                textAlign: TextAlign.center,
-                style: AppText.display(30),
+              const SizedBox(height: 16),
+              _ScoreStrip(game: game),
+              const Spacer(),
+              Center(
+                child: TweenAnimationBuilder<double>(
+                  key: ValueKey(game.turnIndex),
+                  tween: Tween(begin: 0.6, end: 1),
+                  duration: const Duration(milliseconds: 600),
+                  curve: Curves.elasticOut,
+                  builder: (context, scale, child) =>
+                      Transform.scale(scale: scale, child: child),
+                  child: Avatar(
+                    emoji: game.currentPlayer.emoji,
+                    size: 130,
+                    glow: true,
+                  ),
+                ),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 22),
               Text(
-                game.readyLine,
+                game.currentPlayer.name,
+                textAlign: TextAlign.center,
+                style: AppText.display(
+                  46,
+                  shadows: const [
+                    Shadow(color: AppColors.pink, offset: Offset(0, 4)),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                game.handoverLine,
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                   color: Colors.white70,
@@ -357,7 +273,7 @@ class _ReadyState extends State<_Ready> with SingleTickerProviderStateMixin {
                   height: 1.35,
                 ),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 14),
               Center(
                 child: Container(
                   padding: const EdgeInsets.symmetric(
@@ -375,13 +291,7 @@ class _ReadyState extends State<_Ready> with SingleTickerProviderStateMixin {
                 ),
               ),
               const Spacer(),
-              BigButton(
-                label: 'Kartları çevir!',
-                icon: Icons.flip,
-                onPressed: _count == null ? _begin : null,
-                colors: const [AppColors.green, AppColors.greenDark],
-                foreground: Colors.white,
-              ),
+              const SizedBox(height: 56),
             ],
           ),
         ),
@@ -1038,7 +948,7 @@ class _Result extends StatelessWidget {
         BigButton(
           label: game.turnIndex + 1 >= game.totalTurns
               ? 'Sonuçları gör'
-              : 'Sıradaki sahne',
+              : 'Sıradaki: ${game.participants[(game.turnIndex + 1) % game.participants.length].name}',
           icon: Icons.arrow_forward_rounded,
           onPressed: game.nextTurn,
         ),
