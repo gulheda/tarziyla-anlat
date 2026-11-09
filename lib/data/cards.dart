@@ -1,15 +1,5 @@
-/// Özgün kart içerikleri. Yeni kart eklemek için ilgili listeye satır eklemek yeterli.
-const String appName = 'Tarzıyla Anlat';
-
-/// Bir "Anlat" kartı paketi (tema).
-class CardCategory {
-  const CardCategory(this.id, this.name, this.emoji, this.cards);
-
-  final String id;
-  final String name;
-  final String emoji;
-  final List<String> cards;
-}
+// Türkçe kart içerikleri. Yeni kart eklemek için ilgili listeye satır eklemek yeterli.
+import 'content.dart';
 
 /// "Anlat" kartları: anlatılacak kelime ya da durum. Temalara göre ayrılmıştır.
 const List<CardCategory> anlatCategories = [
@@ -24,9 +14,6 @@ const List<CardCategory> anlatCategories = [
   CardCategory('duygu', 'Duygular', '😅', _duygu),
   CardCategory('karakter', 'Karakterler', '🧙', _karakter),
 ];
-
-int get totalAnlatCount =>
-    anlatCategories.fold(0, (sum, c) => sum + c.cards.length);
 
 const List<String> _hayvan = [
   'Flamingo',
@@ -901,12 +888,3 @@ const List<String> tarzCards = [
   'Gözlüğünü ararken kafandaymış gibi anlat',
   'Balonu patlamak üzereymiş gibi anlat',
 ];
-
-/// Seçilen paketlerdeki tüm "Anlat" kartları.
-List<String> anlatPool(Iterable<String> categoryIds) {
-  final ids = categoryIds.toSet();
-  return [
-    for (final c in anlatCategories)
-      if (ids.contains(c.id)) ...c.cards,
-  ];
-}

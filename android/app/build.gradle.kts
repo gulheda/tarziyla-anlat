@@ -15,6 +15,8 @@ android {
     }
 
     defaultConfig {
+        // Uygulamanın desteklediği diller (Play Store dil listesi için).
+        resourceConfigurations += listOf("en", "tr")
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.gulhedakizilhan.tarziylaanlat"
         // You can update the following values to match your application needs.

@@ -1,8 +1,6 @@
 // Oyunun espri dozunu taşıyan metinler.
 // `{n}` anlatıcının, `{g}` bilenin, `{d}` anlatıcının adıyla değişir.
 
-const List<String> avatars = ['🦄', '🐸', '🦊', '🐙', '🐧', '🦖', '🐼', '🐯'];
-
 const List<String> playerNicknames = [
   'Kaptan',
   'Şef',
@@ -54,19 +52,6 @@ const List<String> handoverLines = [
   'Tarih dersi başladı: sıra {n}\'de.',
   'Kanıt sunuldu: sahne {n}\'in.',
   '{n}, bugünün gündemi sensin.',
-];
-
-const List<String> readyLines = [
-  'Kartları kimseye gösterme. Sır küpü ol.',
-  'Süre başlayınca geri dönüş yok. Utanmak serbest.',
-  'Derin bir nefes al. Utancı sonra düşünürsün.',
-  'Mimikler, sesler, jestler... hepsi serbest. Kelimeyi söylemek hariç.',
-  'Seyirci hazır, sahne hazır. Gerisi sende.',
-  'Cringe olmaktan korkma, zaten herkes kayıtta.',
-  'Vibe\'ını yakala, gerisi gelir.',
-  'Aklında tut: en komik olan kazanır.',
-  'Gündemi takip et ama bu turda sahne senin.',
-  'Nedenini bilen yok ama sen yine de dene.',
 ];
 
 const List<String> verdictsZero = [

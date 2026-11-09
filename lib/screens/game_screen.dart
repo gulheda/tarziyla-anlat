@@ -2,9 +2,10 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
+import '../l10n/app_localizations.dart';
 import '../logic/game.dart';
+import '../services/haptics.dart';
 import '../ui/theme.dart';
 import '../ui/widgets.dart';
 
@@ -17,58 +18,75 @@ class GameScreen extends StatefulWidget {
   State<GameScreen> createState() => _GameScreenState();
 }
 
-class _GameScreenState extends State<GameScreen> {
+class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
   Game get game => widget.game;
   int _lastBuzz = -1;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     game.addListener(_buzzNearEnd);
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     game.removeListener(_buzzNearEnd);
     game.dispose();
     super.dispose();
   }
 
+  /// Uygulama arka plana gidince süre durur, dönünce oyuncu "Devam"a basar.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed) game.pause();
+  }
+
   /// Son beş saniyede her saniye titreşim verir.
   void _buzzNearEnd() {
     if (game.phase == Phase.playing &&
+        !game.paused &&
         game.secondsLeft <= 5 &&
         game.secondsLeft != _lastBuzz) {
       _lastBuzz = game.secondsLeft;
-      HapticFeedback.heavyImpact();
+      Haptics.heavy();
     }
   }
 
   Future<void> _confirmExit() async {
+    final l10n = AppLocalizations.of(context);
+    final wasRunning = game.phase == Phase.playing && !game.paused;
+    if (wasRunning) game.pause();
     final leave = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Perde mi iniyor?'),
-        content: const Text('Çıkarsan skorlar kaybolur.'),
+        title: Text(l10n.exitTitle),
+        content: Text(l10n.exitBody),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
             child: Text(
-              'Devam',
+              l10n.keepPlaying,
               style: AppText.display(16, color: AppColors.yellow),
             ),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             child: Text(
-              'Çık',
+              l10n.leave,
               style: AppText.display(16, color: Colors.white70),
             ),
           ),
         ],
       ),
     );
-    if (leave == true && mounted) Navigator.of(context).pop();
+    if (!mounted) return;
+    if (leave == true) {
+      Navigator.of(context).pop();
+    } else if (wasRunning) {
+      game.resume();
+    }
   }
 
   @override
@@ -116,41 +134,50 @@ class _ScoreStrip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Wrap(
       spacing: 8,
       runSpacing: 8,
       alignment: WrapAlignment.center,
       children: [
         for (final p in game.participants)
-          Container(
-            padding: const EdgeInsets.fromLTRB(5, 5, 14, 5),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(30),
-              gradient: identical(p, game.currentPlayer)
-                  ? const LinearGradient(
-                      colors: [AppColors.yellow, AppColors.orange],
-                    )
-                  : null,
-              color: identical(p, game.currentPlayer)
-                  ? null
-                  : Colors.white.withValues(alpha: 0.12),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Avatar(emoji: p.emoji, size: 30),
-                const SizedBox(width: 8),
-                Text(
-                  '${p.name}  ${p.score}',
-                  style: AppText.display(
-                    15,
-                    color: identical(p, game.currentPlayer)
-                        ? AppColors.ink
-                        : Colors.white,
+          Semantics(
+            label: '${p.name}, ${l10n.pointsLabel(p.score)}',
+            excludeSemantics: true,
+            child: Container(
+              padding: const EdgeInsets.fromLTRB(5, 5, 14, 5),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(30),
+                gradient: identical(p, game.currentPlayer)
+                    ? const LinearGradient(
+                        colors: [AppColors.yellow, AppColors.orange],
+                      )
+                    : null,
+                color: identical(p, game.currentPlayer)
+                    ? null
+                    : Colors.white.withValues(alpha: 0.12),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Avatar(emoji: p.emoji, size: 30),
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: Text(
+                      '${p.name}  ${p.score}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppText.display(
+                        15,
+                        color: identical(p, game.currentPlayer)
+                            ? AppColors.ink
+                            : Colors.white,
+                      ),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
       ],
@@ -158,6 +185,7 @@ class _ScoreStrip extends StatelessWidget {
   }
 }
 
+/// Sıradaki oyuncuyu gösterir ve "3, 2, 1" geri sayımını kendiliğinden başlatır.
 class _Handover extends StatefulWidget {
   const _Handover({required this.game});
 
@@ -186,10 +214,9 @@ class _HandoverState extends State<_Handover> {
     super.dispose();
   }
 
-  /// "3, 2, 1" geri sayımı yapar, ardından turu başlatır.
   void _begin() {
     if (_count != null) return;
-    HapticFeedback.mediumImpact();
+    Haptics.medium();
     setState(() => _count = 3);
     _timer = Timer.periodic(const Duration(milliseconds: 800), (t) {
       final next = _count! - 1;
@@ -197,7 +224,7 @@ class _HandoverState extends State<_Handover> {
         t.cancel();
         widget.game.startTurn();
       } else {
-        HapticFeedback.selectionClick();
+        Haptics.selection();
         setState(() => _count = next);
       }
     });
@@ -205,116 +232,127 @@ class _HandoverState extends State<_Handover> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final game = widget.game;
     return Stack(
       children: [
         AnimatedOpacity(
           opacity: 0.35,
           duration: const Duration(milliseconds: 250),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Center(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    'TUR ${game.round} / ${game.config.rounds}',
-                    style: AppText.display(
-                      14,
-                      letterSpacing: 3,
-                      color: Colors.white70,
+          child: FillRemainingScroll(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Center(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      l10n.roundBadge(game.round, game.config.rounds),
+                      style: AppText.display(
+                        14,
+                        letterSpacing: 3,
+                        color: Colors.white70,
+                      ),
                     ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 16),
-              _ScoreStrip(game: game),
-              const Spacer(),
-              Center(
-                child: TweenAnimationBuilder<double>(
-                  key: ValueKey(game.turnIndex),
-                  tween: Tween(begin: 0.6, end: 1),
-                  duration: const Duration(milliseconds: 600),
-                  curve: Curves.elasticOut,
-                  builder: (context, scale, child) =>
-                      Transform.scale(scale: scale, child: child),
-                  child: Avatar(
-                    emoji: game.currentPlayer.emoji,
-                    size: 130,
-                    glow: true,
+                const SizedBox(height: 16),
+                _ScoreStrip(game: game),
+                const Spacer(),
+                Center(
+                  child: TweenAnimationBuilder<double>(
+                    key: ValueKey(game.turnIndex),
+                    tween: Tween(begin: 0.6, end: 1),
+                    duration: const Duration(milliseconds: 600),
+                    curve: Curves.elasticOut,
+                    builder: (context, scale, child) =>
+                        Transform.scale(scale: scale, child: child),
+                    child: Avatar(
+                      emoji: game.currentPlayer.emoji,
+                      size: 130,
+                      glow: true,
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 22),
-              Text(
-                game.currentPlayer.name,
-                textAlign: TextAlign.center,
-                style: AppText.display(
-                  46,
-                  shadows: const [
-                    Shadow(color: AppColors.pink, offset: Offset(0, 4)),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                game.handoverLine,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: Colors.white70,
-                  fontSize: 17,
-                  height: 1.35,
-                ),
-              ),
-              const SizedBox(height: 14),
-              Center(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.yellow.withValues(alpha: 0.18),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    '⏱️ ${game.config.seconds} saniyen var',
-                    style: AppText.display(16, color: AppColors.yellow),
+                const SizedBox(height: 22),
+                Text(
+                  game.currentPlayer.name,
+                  textAlign: TextAlign.center,
+                  style: AppText.display(
+                    46,
+                    shadows: const [
+                      Shadow(color: AppColors.pink, offset: Offset(0, 4)),
+                    ],
                   ),
                 ),
-              ),
-              const Spacer(),
-              const SizedBox(height: 56),
-            ],
+                const SizedBox(height: 12),
+                Text(
+                  game.handoverLine,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    fontSize: 17,
+                    height: 1.35,
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Center(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.yellow.withValues(alpha: 0.18),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      l10n.secondsToGo(game.config.seconds),
+                      style: AppText.display(16, color: AppColors.yellow),
+                    ),
+                  ),
+                ),
+                const Spacer(),
+              ],
+            ),
           ),
         ),
         if (_count != null)
           Positioned.fill(
             child: IgnorePointer(
               child: Center(
-                child: TweenAnimationBuilder<double>(
-                  key: ValueKey(_count),
-                  tween: Tween(begin: 1.9, end: 1),
-                  duration: const Duration(milliseconds: 520),
-                  curve: Curves.elasticOut,
-                  builder: (context, scale, child) =>
-                      Transform.scale(scale: scale, child: child),
-                  child: Text(
-                    '$_count',
-                    style: AppText.display(
-                      190,
-                      color: AppColors.yellow,
-                      shadows: const [
-                        Shadow(color: AppColors.orange, offset: Offset(0, 10)),
-                        Shadow(color: Colors.black45, blurRadius: 24),
-                      ],
+                child: Semantics(
+                  liveRegion: true,
+                  label: '$_count',
+                  child: TweenAnimationBuilder<double>(
+                    key: ValueKey(_count),
+                    tween: Tween(begin: 1.9, end: 1),
+                    duration: const Duration(milliseconds: 520),
+                    curve: Curves.elasticOut,
+                    builder: (context, scale, child) =>
+                        Transform.scale(scale: scale, child: child),
+                    child: ExcludeSemantics(
+                      child: Text(
+                        '$_count',
+                        style: AppText.display(
+                          190,
+                          color: AppColors.yellow,
+                          shadows: const [
+                            Shadow(
+                              color: AppColors.orange,
+                              offset: Offset(0, 10),
+                            ),
+                            Shadow(color: Colors.black45, blurRadius: 24),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -333,171 +371,262 @@ class _Playing extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final competitive = game.config.mode == GameMode.competitive;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+    final current = game.current;
+
+    return Stack(
       children: [
-        Row(
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Row(
+                    children: [
+                      Avatar(emoji: game.currentPlayer.emoji, size: 42),
+                      const SizedBox(width: 8),
+                      Flexible(
+                        child: Text(
+                          game.currentPlayer.name,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppText.display(17),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Semantics(
+                  button: true,
+                  label: l10n.semanticsTimer(game.secondsLeft),
+                  hint: l10n.pauseTimerHint,
+                  onTap: game.pause,
+                  excludeSemantics: true,
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: game.pause,
+                    child: TimerRing(
+                      secondsLeft: game.secondsLeft,
+                      totalSeconds: game.config.seconds,
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: competitive
+                        ? Semantics(
+                            label: l10n.semanticsScore(game.turnCorrect.length),
+                            excludeSemantics: true,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 8,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.green.withValues(alpha: 0.18),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: AppColors.green.withValues(alpha: 0.5),
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(
+                                    Icons.check_circle,
+                                    color: AppColors.green,
+                                    size: 20,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    '${game.turnCorrect.length}',
+                                    style: AppText.display(
+                                      20,
+                                      color: AppColors.green,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          )
+                        : null,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
             Expanded(
-              child: Row(
+              child: Stack(
                 children: [
-                  Avatar(emoji: game.currentPlayer.emoji, size: 42),
-                  const SizedBox(width: 8),
-                  Flexible(
-                    child: Text(
-                      game.currentPlayer.name,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppText.display(17),
+                  _SwipeArea(
+                    canPass: game.canPass,
+                    onCorrect: () {
+                      Haptics.medium();
+                      game.markCorrect();
+                    },
+                    onPass: () {
+                      Haptics.selection();
+                      game.pass();
+                    },
+                    child: Column(
+                      children: [
+                        Expanded(
+                          child: _FlipSwitcher(
+                            id: current.word,
+                            child: Semantics(
+                              container: true,
+                              label: '${l10n.labelWord}: ${current.word}',
+                              excludeSemantics: true,
+                              child: GameCard(
+                                label: l10n.labelWord,
+                                text: current.word,
+                                icon: Icons.record_voice_over,
+                                colors: pickGradient(
+                                  konuGradients,
+                                  current.word,
+                                ),
+                                tilt: -0.012,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 14),
+                        Expanded(
+                          child: _FlipSwitcher(
+                            id: current.style,
+                            child: Semantics(
+                              container: true,
+                              label: '${l10n.labelStyle}: ${current.style}',
+                              excludeSemantics: true,
+                              child: GameCard(
+                                label: l10n.labelStyle,
+                                text: current.style,
+                                icon: Icons.theater_comedy,
+                                colors: pickGradient(
+                                  tarzGradients,
+                                  current.style,
+                                ),
+                                tilt: 0.012,
+                                textSize: 32,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Positioned.fill(
+                    child: _Burst(count: game.turnCorrect.length),
+                  ),
+                  Positioned.fill(
+                    child: Center(
+                      child: _PlusOne(count: game.turnCorrect.length),
                     ),
                   ),
                 ],
               ),
             ),
-            TimerRing(
-              secondsLeft: game.secondsLeft,
-              totalSeconds: game.config.seconds,
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                Expanded(
+                  child: BigButton(
+                    label: competitive
+                        ? l10n.passButton(game.passesLeft)
+                        : l10n.swapButton(game.passesLeft),
+                    icon: Icons.skip_next_rounded,
+                    colors: const [Color(0xFFFFC46B), AppColors.orange],
+                    onPressed: game.canPass
+                        ? () {
+                            Haptics.selection();
+                            game.pass();
+                          }
+                        : null,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: BigButton(
+                    label: l10n.gotItButton,
+                    icon: Icons.check_rounded,
+                    colors: const [AppColors.green, AppColors.greenDark],
+                    foreground: Colors.white,
+                    onPressed: () {
+                      Haptics.medium();
+                      game.markCorrect();
+                    },
+                  ),
+                ),
+              ],
             ),
-            Expanded(
-              child: Align(
-                alignment: Alignment.centerRight,
-                child: competitive
-                    ? Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.green.withValues(alpha: 0.18),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(
-                            color: AppColors.green.withValues(alpha: 0.5),
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(
-                              Icons.check_circle,
-                              color: AppColors.green,
-                              size: 20,
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              '${game.turnCorrect.length}',
-                              style: AppText.display(
-                                20,
-                                color: AppColors.green,
-                              ),
-                            ),
-                          ],
-                        ),
-                      )
-                    : null,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        Expanded(
-          child: Stack(
-            children: [
-              _SwipeArea(
-                canPass: game.canPass,
-                onCorrect: () {
-                  HapticFeedback.mediumImpact();
-                  game.markCorrect();
-                },
-                onPass: () {
-                  HapticFeedback.selectionClick();
-                  game.pass();
-                },
-                child: Column(
-                  children: [
-                    Expanded(
-                      child: _FlipSwitcher(
-                        id: game.current.konu,
-                        child: GameCard(
-                          label: 'KELİME',
-                          text: game.current.konu,
-                          icon: Icons.record_voice_over,
-                          colors: pickGradient(
-                            konuGradients,
-                            game.current.konu,
-                          ),
-                          tilt: -0.012,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-                    Expanded(
-                      child: _FlipSwitcher(
-                        id: game.current.tarz,
-                        child: GameCard(
-                          label: 'TARZ',
-                          text: game.current.tarz,
-                          icon: Icons.theater_comedy,
-                          colors: pickGradient(
-                            tarzGradients,
-                            game.current.tarz,
-                          ),
-                          tilt: 0.012,
-                          textSize: 32,
-                        ),
-                      ),
-                    ),
-                  ],
+            if (!competitive)
+              TextButton(
+                onPressed: game.endTurnEarly,
+                child: Text(
+                  l10n.giveUp,
+                  style: AppText.display(15, color: Colors.white70),
                 ),
               ),
-              Positioned.fill(child: _Burst(count: game.turnCorrect.length)),
-              Positioned.fill(
-                child: Center(child: _PlusOne(count: game.turnCorrect.length)),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 20),
-        Row(
-          children: [
-            Expanded(
-              child: BigButton(
-                label: competitive
-                    ? 'Pas (${game.passesLeft})'
-                    : 'Değiştir (${game.passesLeft})',
-                icon: Icons.skip_next_rounded,
-                colors: const [Color(0xFFFFC46B), AppColors.orange],
-                onPressed: game.canPass
-                    ? () {
-                        HapticFeedback.selectionClick();
-                        game.pass();
-                      }
-                    : null,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: BigButton(
-                label: 'Bildiler!',
-                icon: Icons.check_rounded,
-                colors: const [AppColors.green, AppColors.greenDark],
-                foreground: Colors.white,
-                onPressed: () {
-                  HapticFeedback.mediumImpact();
-                  game.markCorrect();
-                },
-              ),
-            ),
           ],
         ),
-        if (!competitive)
-          TextButton(
-            onPressed: game.endTurnEarly,
-            child: Text(
-              'Vazgeç, kimse bilemedi',
-              style: AppText.display(15, color: Colors.white70),
-            ),
+        // Duraklatılınca kartlar ekran okuyuculardan da gizlenir (hile ve sızıntı olmasın).
+        if (game.paused)
+          Positioned.fill(
+            child: BlockSemantics(child: _PausedOverlay(game: game)),
           ),
       ],
+    );
+  }
+}
+
+/// Süre durduğunda kartları gizler; oyuncu "Devam"a basana kadar bekler.
+class _PausedOverlay extends StatelessWidget {
+  const _PausedOverlay({required this.game});
+
+  final Game game;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: game.resume,
+      child: ColoredBox(
+        color: AppColors.bg1,
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.pause_circle_filled_rounded,
+                  size: 96,
+                  color: AppColors.yellow,
+                ),
+                const SizedBox(height: 12),
+                Text(l10n.paused, style: AppText.display(40)),
+                const SizedBox(height: 8),
+                Text(
+                  l10n.pausedHint,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: Colors.white70, fontSize: 16),
+                ),
+                const SizedBox(height: 28),
+                BigButton(
+                  label: l10n.resumeButton,
+                  icon: Icons.play_arrow_rounded,
+                  onPressed: game.resume,
+                  colors: const [AppColors.green, AppColors.greenDark],
+                  foreground: Colors.white,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -578,6 +707,7 @@ class _SwipeAreaState extends State<_SwipeArea>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return LayoutBuilder(
       builder: (context, box) {
         final w = box.maxWidth;
@@ -592,6 +722,7 @@ class _SwipeAreaState extends State<_SwipeArea>
             setState(() => _dx += d.delta.dx);
           },
           onHorizontalDragEnd: (d) => _release(d, w),
+          onHorizontalDragCancel: () => _animateTo(0),
           child: Stack(
             children: [
               Transform.translate(
@@ -622,7 +753,7 @@ class _SwipeAreaState extends State<_SwipeArea>
                             ],
                           ),
                           child: Text(
-                            right ? 'BİLDİLER!' : 'PAS',
+                            right ? l10n.swipeGotIt : l10n.swipePass,
                             style: AppText.display(
                               22,
                               color: right ? Colors.white : AppColors.ink,
@@ -721,26 +852,28 @@ class _PlusOne extends StatelessWidget {
   Widget build(BuildContext context) {
     if (count == 0) return const SizedBox.shrink();
     return IgnorePointer(
-      child: TweenAnimationBuilder<double>(
-        key: ValueKey(count),
-        tween: Tween(begin: 0, end: 1),
-        duration: const Duration(milliseconds: 900),
-        curve: Curves.easeOut,
-        builder: (context, t, _) => Opacity(
-          opacity: (1 - t * t).clamp(0.0, 1.0),
-          child: Transform.translate(
-            offset: Offset(0, -110 * t),
-            child: Transform.scale(
-              scale: 0.7 + 0.6 * sin(min(t * 1.6, 1) * pi / 2),
-              child: Text(
-                '+1',
-                style: AppText.display(
-                  96,
-                  color: AppColors.green,
-                  shadows: const [
-                    Shadow(color: Colors.white, blurRadius: 14),
-                    Shadow(color: Colors.black45, offset: Offset(0, 5)),
-                  ],
+      child: ExcludeSemantics(
+        child: TweenAnimationBuilder<double>(
+          key: ValueKey(count),
+          tween: Tween(begin: 0, end: 1),
+          duration: const Duration(milliseconds: 900),
+          curve: Curves.easeOut,
+          builder: (context, t, _) => Opacity(
+            opacity: (1 - t * t).clamp(0.0, 1.0),
+            child: Transform.translate(
+              offset: Offset(0, -110 * t),
+              child: Transform.scale(
+                scale: 0.7 + 0.6 * sin(min(t * 1.6, 1) * pi / 2),
+                child: Text(
+                  '+1',
+                  style: AppText.display(
+                    96,
+                    color: AppColors.green,
+                    shadows: const [
+                      Shadow(color: Colors.white, blurRadius: 14),
+                      Shadow(color: Colors.black45, offset: Offset(0, 5)),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -794,20 +927,21 @@ class _Result extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final competitive = game.config.mode == GameMode.competitive;
     final waitingForGuesser =
         !competitive && game.classicSolved && game.guesser == null;
     final title = game.secondsLeft == 0
-        ? 'Süre doldu!'
-        : (game.classicSolved ? 'Bildiler!' : 'Tur bitti');
+        ? l10n.timeUp
+        : (game.classicSolved ? l10n.gotItTitle : l10n.roundOver);
 
-    final children = <Widget>[
+    final content = <Widget>[
       Text(title, textAlign: TextAlign.center, style: AppText.display(34)),
       const SizedBox(height: 10),
     ];
 
     if (competitive) {
-      children.addAll([
+      content.addAll([
         TweenAnimationBuilder<int>(
           tween: IntTween(begin: 0, end: game.turnCorrect.length),
           duration: const Duration(milliseconds: 900),
@@ -825,139 +959,142 @@ class _Result extends StatelessWidget {
           ),
         ),
         Text(
-          'kart bildirdin',
+          l10n.cardsGuessed(game.turnCorrect.length),
           textAlign: TextAlign.center,
           style: AppText.display(18, color: Colors.white70),
         ),
         const SizedBox(height: 14),
         _Bubble(text: game.verdict),
         const SizedBox(height: 12),
-        Expanded(
-          child: ListView(
-            children: [
-              for (final c in game.turnCorrect)
-                Container(
-                  margin: const EdgeInsets.only(bottom: 8),
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(18),
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.1),
-                    ),
-                  ),
-                  child: Row(
+        for (final c in game.turnCorrect)
+          Container(
+            margin: const EdgeInsets.only(bottom: 8),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.check_circle, color: AppColors.green),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(Icons.check_circle, color: AppColors.green),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(c.konu, style: AppText.display(16)),
-                            Text(
-                              c.tarz,
-                              style: const TextStyle(color: Colors.white60),
-                            ),
-                          ],
-                        ),
+                      Text(c.word, style: AppText.display(16)),
+                      Text(
+                        c.style,
+                        style: const TextStyle(color: Colors.white60),
                       ),
                     ],
                   ),
                 ),
-            ],
+              ],
+            ),
           ),
-        ),
       ]);
     } else if (waitingForGuesser) {
-      children.addAll([
+      content.addAll([
         Text(
-          'Kim bildi?',
+          l10n.whoGuessed,
           textAlign: TextAlign.center,
           style: AppText.display(22, color: Colors.white70),
         ),
         const SizedBox(height: 20),
-        Expanded(
-          child: SingleChildScrollView(
-            child: Wrap(
-              alignment: WrapAlignment.center,
-              spacing: 14,
-              runSpacing: 14,
-              children: [
-                for (var i = 0; i < game.participants.length; i++)
-                  if (i != game.currentIndex)
-                    PressableScale(
-                      onTap: () {
-                        HapticFeedback.mediumImpact();
-                        game.awardClassic(i);
-                      },
-                      child: Container(
-                        width: 124,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: [
-                              Colors.white.withValues(alpha: 0.18),
-                              Colors.white.withValues(alpha: 0.06),
-                            ],
-                          ),
-                          borderRadius: BorderRadius.circular(22),
-                          border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.2),
-                          ),
-                        ),
-                        child: Column(
-                          children: [
-                            Avatar(emoji: game.participants[i].emoji, size: 66),
-                            const SizedBox(height: 10),
-                            Text(
-                              game.participants[i].name,
-                              overflow: TextOverflow.ellipsis,
-                              style: AppText.display(16),
-                            ),
+        Wrap(
+          alignment: WrapAlignment.center,
+          spacing: 14,
+          runSpacing: 14,
+          children: [
+            for (var i = 0; i < game.participants.length; i++)
+              if (i != game.currentIndex)
+                Semantics(
+                  button: true,
+                  label: game.participants[i].name,
+                  excludeSemantics: true,
+                  onTap: () => game.awardClassic(i),
+                  child: PressableScale(
+                    onTap: () {
+                      Haptics.medium();
+                      game.awardClassic(i);
+                    },
+                    child: Container(
+                      width: 124,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            Colors.white.withValues(alpha: 0.18),
+                            Colors.white.withValues(alpha: 0.06),
                           ],
                         ),
+                        borderRadius: BorderRadius.circular(22),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.2),
+                        ),
+                      ),
+                      child: Column(
+                        children: [
+                          Avatar(emoji: game.participants[i].emoji, size: 66),
+                          const SizedBox(height: 10),
+                          Text(
+                            game.participants[i].name,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppText.display(16),
+                          ),
+                        ],
                       ),
                     ),
-              ],
-            ),
-          ),
+                  ),
+                ),
+          ],
         ),
       ]);
     } else {
-      children.addAll([
-        const Spacer(),
-        Text(
-          game.guesser != null ? '🎉' : '🙈',
-          textAlign: TextAlign.center,
-          style: const TextStyle(fontSize: 84),
+      content.addAll([
+        const SizedBox(height: 40),
+        ExcludeSemantics(
+          child: Text(
+            game.guesser != null ? '🎉' : '🙈',
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 84),
+          ),
         ),
         const SizedBox(height: 14),
         _Bubble(text: game.verdict),
-        const Spacer(),
       ]);
     }
 
-    if (competitive || !waitingForGuesser) {
-      children.addAll([
-        const SizedBox(height: 8),
-        _ScoreStrip(game: game),
-        const SizedBox(height: 16),
-        BigButton(
-          label: game.turnIndex + 1 >= game.totalTurns
-              ? 'Sonuçları gör'
-              : 'Sıradaki: ${game.participants[(game.turnIndex + 1) % game.participants.length].name}',
-          icon: Icons.arrow_forward_rounded,
-          onPressed: game.nextTurn,
-        ),
-      ]);
-    }
+    final showNext = competitive || !waitingForGuesser;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: children,
+      children: [
+        Expanded(
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: content,
+            ),
+          ),
+        ),
+        if (showNext) ...[
+          const SizedBox(height: 8),
+          _ScoreStrip(game: game),
+          const SizedBox(height: 16),
+          BigButton(
+            label: game.isLastTurn
+                ? l10n.seeResults
+                : l10n.nextUp(game.nextPlayer.name),
+            icon: Icons.arrow_forward_rounded,
+            onPressed: game.nextTurn,
+          ),
+        ],
+      ],
     );
   }
 }
@@ -997,6 +1134,7 @@ class _Finished extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final ranking = game.ranking;
     final top = ranking.first.score;
     final winners = ranking.where((p) => p.score == top).toList();
@@ -1009,42 +1147,51 @@ class _Finished extends StatelessWidget {
         Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const SizedBox(height: 6),
-            Text(
-              tie ? 'Berabere!' : '${winners.first.name} kazandı!',
-              textAlign: TextAlign.center,
-              style: AppText.display(
-                36,
-                color: AppColors.yellow,
-                shadows: const [
-                  Shadow(color: AppColors.orange, offset: Offset(0, 4)),
-                ],
-              ),
-            ),
-            if (tie)
-              Padding(
-                padding: const EdgeInsets.only(top: 4),
-                child: Text(
-                  winners.map((w) => w.name).join(' · '),
-                  textAlign: TextAlign.center,
-                  style: AppText.display(18),
-                ),
-              ),
-            const SizedBox(height: 8),
-            Text(
-              game.finalLine,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: Colors.white70,
-                fontSize: 15,
-                height: 1.4,
-              ),
-            ),
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.only(top: 22),
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    const SizedBox(height: 6),
+                    Semantics(
+                      header: true,
+                      child: Text(
+                        tie
+                            ? l10n.tieTitle
+                            : l10n.winnerTitle(winners.first.name),
+                        textAlign: TextAlign.center,
+                        style: AppText.display(
+                          36,
+                          color: AppColors.yellow,
+                          shadows: const [
+                            Shadow(
+                              color: AppColors.orange,
+                              offset: Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    if (tie)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Text(
+                          winners.map((w) => w.name).join(' · '),
+                          textAlign: TextAlign.center,
+                          style: AppText.display(18),
+                        ),
+                      ),
+                    const SizedBox(height: 8),
+                    Text(
+                      game.finalLine,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 15,
+                        height: 1.4,
+                      ),
+                    ),
+                    const SizedBox(height: 22),
                     _Podium(top: ranking.take(3).toList()),
                     const SizedBox(height: 14),
                     for (var i = 0; i < rest.length; i++)
@@ -1070,6 +1217,7 @@ class _Finished extends StatelessWidget {
                             Expanded(
                               child: Text(
                                 rest[i].name,
+                                overflow: TextOverflow.ellipsis,
                                 style: AppText.display(17),
                               ),
                             ),
@@ -1089,7 +1237,7 @@ class _Finished extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             BigButton(
-              label: 'Tekrar oyna',
+              label: l10n.playAgain,
               icon: Icons.replay_rounded,
               onPressed: () => Navigator.of(context).pushReplacement(
                 fadeSlideRoute(GameScreen(game: Game(game.config))),
@@ -1099,7 +1247,7 @@ class _Finished extends StatelessWidget {
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
               child: Text(
-                'Ana menü',
+                l10n.mainMenu,
                 style: AppText.display(16, color: Colors.white70),
               ),
             ),
@@ -1131,66 +1279,78 @@ class _Podium extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        for (final rank in order) Expanded(child: _step(top[rank], rank)),
+        for (final rank in order)
+          Expanded(child: _step(context, top[rank], rank)),
       ],
     );
   }
 
-  Widget _step(Participant p, int rank) {
+  Widget _step(BuildContext context, Participant p, int rank) {
+    final l10n = AppLocalizations.of(context);
     final medal = _medals[rank];
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        if (rank == 0) const Text('👑', style: TextStyle(fontSize: 34)),
-        Avatar(emoji: p.emoji, size: rank == 0 ? 76 : 60, glow: rank == 0),
-        const SizedBox(height: 6),
-        Text(
-          p.name,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: AppText.display(15),
-        ),
-        const SizedBox(height: 6),
-        TweenAnimationBuilder<double>(
-          tween: Tween(begin: 0, end: _heights[rank]),
-          duration: Duration(milliseconds: _durations[rank]),
-          curve: Curves.easeOutBack,
-          builder: (context, h, _) => Container(
-            height: max(h, 0),
-            margin: const EdgeInsets.symmetric(horizontal: 4),
-            alignment: Alignment.topCenter,
-            padding: const EdgeInsets.only(top: 10),
-            decoration: BoxDecoration(
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(18),
-              ),
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [medal, Color.lerp(medal, Colors.black, 0.35)!],
-              ),
-              boxShadow: [
-                BoxShadow(color: medal.withValues(alpha: 0.35), blurRadius: 16),
-              ],
-            ),
-            child: h < 80
-                ? null
-                : Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        '${rank + 1}',
-                        style: AppText.display(34, color: AppColors.ink),
-                      ),
-                      Text(
-                        '${p.score} puan',
-                        style: AppText.display(13, color: AppColors.ink),
-                      ),
-                    ],
-                  ),
+    return Semantics(
+      label: '${rank + 1}. ${p.name}, ${l10n.pointsLabel(p.score)}',
+      excludeSemantics: true,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (rank == 0) const Text('👑', style: TextStyle(fontSize: 34)),
+          Avatar(emoji: p.emoji, size: rank == 0 ? 76 : 60, glow: rank == 0),
+          const SizedBox(height: 6),
+          Text(
+            p.name,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: AppText.display(15),
           ),
-        ),
-      ],
+          const SizedBox(height: 6),
+          TweenAnimationBuilder<double>(
+            tween: Tween(begin: 0, end: _heights[rank]),
+            duration: Duration(milliseconds: _durations[rank]),
+            curve: Curves.easeOutBack,
+            builder: (context, h, _) => Container(
+              height: max(h, 0),
+              margin: const EdgeInsets.symmetric(horizontal: 4),
+              alignment: Alignment.topCenter,
+              padding: const EdgeInsets.only(top: 10),
+              decoration: BoxDecoration(
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(18),
+                ),
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [medal, Color.lerp(medal, Colors.black, 0.35)!],
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: medal.withValues(alpha: 0.35),
+                    blurRadius: 16,
+                  ),
+                ],
+              ),
+              child: h < 40
+                  ? null
+                  : FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            '${rank + 1}',
+                            style: AppText.display(34, color: AppColors.ink),
+                          ),
+                          Text(
+                            l10n.pointsLabel(p.score),
+                            style: AppText.display(13, color: AppColors.ink),
+                          ),
+                        ],
+                      ),
+                    ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

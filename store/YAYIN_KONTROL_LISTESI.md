@@ -73,3 +73,21 @@ Google Play için ayrıca bir geliştirici hesabı (tek seferlik 25 dolar) ve im
   - **Alternatifler:** GitHub Pages ya da Cloudflare Pages (ikisi de ücretsiz). Alt klasörde yayınlayacaksan `flutter build web --release --base-href /klasor-adi/` ile yeniden derlemek gerekir.
   - **Sınırlar:** İlk açılışta internet gerekir (yaklaşık 7 MB iner, emojiler de internetten gelir). Sonrasında önbelleğe alınır. Haptik titreşim çalışmaz. App Store'da aranmaz.
   - Web sürümünü yeniden derlemek için: `flutter build web --release`
+
+
+---
+
+## Bulunabilirlik (SEO) / Discoverability
+
+Yapılanlar / Done:
+- Web sayfası: başlık, açıklama, Open Graph/Twitter etiketleri, JSON-LD (VideoGame), robots.txt, sitemap.xml, llms.txt, paylaşım görseli (`web/og-image.png`).
+- GitHub: İngilizce + Türkçe README, MIT lisansı, konu etiketleri (topics), CONTRIBUTING, sorun şablonları, CI.
+- Mağaza metinleri İngilizce + Türkçe: `store/app-store-listing.md`.
+
+Senin yapman gerekenler / To do (accounts are yours):
+1. **Netlify site adını değiştir** (Site configuration > Site name), örneğin `tarziyla-anlat`. Yeni adres `https://tarziyla-anlat.netlify.app` olur. Sonra şu dosyalardaki eski adresi yenisiyle değiştir ve yeniden yayınla:
+   `web/index.html`, `web/robots.txt`, `web/sitemap.xml`, `web/llms.txt`, `README.md`, `lib/constants.dart` (yalnızca repo adresi değişirse). Arama: `grep -rn guileless-pithivier .`
+2. **Google Search Console**: siteyi ekle (URL prefix), `sitemap.xml` adresini gönder. **Bing Webmaster Tools**: aynı (Google'dan içe aktarabilirsin).
+3. **GitHub sosyal önizleme**: repo Settings > General > Social preview > `docs/social-preview.png` dosyasını yükle (API ile yapılamıyor).
+4. Oyunu duyur: Reddit (r/boardgames, r/partygames, r/FlutterDev, r/Turkey), Product Hunt, itch.io, Türk teknoloji toplulukları. README'de İngilizce ve Türkçe anahtar kelimeler var.
+5. Mağazaya çıkınca (App Store / Google Play) mağaza listelerini `store/app-store-listing.md`'den doldur.

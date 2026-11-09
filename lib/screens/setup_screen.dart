@@ -1,10 +1,31 @@
 import 'package:flutter/material.dart';
 
-import '../data/funny.dart';
+import '../data/contents.dart';
+import '../l10n/app_localizations.dart';
 import '../logic/game.dart';
+import '../services/settings.dart';
 import '../ui/theme.dart';
 import '../ui/widgets.dart';
 import 'game_screen.dart';
+
+/// Oyuncu adlarını temizler: boşlukları kırpar, boş olanlara varsayılan ad
+/// verir, aynı adları ayırır ("Kaptan", "Kaptan 2", ...).
+List<String> sanitizeNames(List<String> raw, List<String> defaults) {
+  final result = <String>[];
+  final used = <String>{};
+  for (var i = 0; i < raw.length; i++) {
+    var name = raw[i].replaceAll(RegExp(r'\s+'), ' ').trim();
+    if (name.isEmpty) name = defaults[i % defaults.length];
+    var candidate = name;
+    var n = 2;
+    while (!used.add(candidate.toLowerCase())) {
+      candidate = '$name $n';
+      n++;
+    }
+    result.add(candidate);
+  }
+  return result;
+}
 
 class SetupScreen extends StatefulWidget {
   const SetupScreen({super.key, required this.mode});
@@ -18,22 +39,30 @@ class SetupScreen extends StatefulWidget {
 class _SetupScreenState extends State<SetupScreen> {
   static const _maxPlayers = 8;
 
-  late final List<TextEditingController> _names;
+  final List<TextEditingController> _names = [];
   int _rounds = 3;
   late int _seconds;
+  late GameContent _content;
+  bool _ready = false;
 
   bool get _competitive => widget.mode == GameMode.competitive;
-  String get _unit => _competitive ? 'Takım' : 'Oyuncu';
-  List<String> get _nicknames => _competitive ? teamNicknames : playerNicknames;
+  List<String> get _defaults =>
+      _competitive ? _content.teamNicknames : _content.playerNicknames;
 
   @override
-  void initState() {
-    super.initState();
-    _seconds = _competitive ? 60 : 90;
-    _names = List.generate(
-      _competitive ? 2 : 3,
-      (i) => TextEditingController(text: _nicknames[i]),
-    );
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_ready) return;
+    _ready = true;
+    _content = contentFor(Localizations.localeOf(context).languageCode);
+    final memory = SettingsScope.of(context).setupFor(widget.mode);
+    _seconds = memory?.seconds ?? (_competitive ? 60 : 90);
+    _rounds = memory?.rounds ?? 3;
+    final names =
+        memory?.names ?? _defaults.take(_competitive ? 2 : 3).toList();
+    for (final n in names) {
+      _names.add(TextEditingController(text: n));
+    }
   }
 
   @override
@@ -47,7 +76,7 @@ class _SetupScreenState extends State<SetupScreen> {
   void _add() {
     if (_names.length >= _maxPlayers) return;
     setState(() {
-      _names.add(TextEditingController(text: _nicknames[_names.length]));
+      _names.add(TextEditingController(text: _defaults[_names.length]));
     });
   }
 
@@ -57,26 +86,42 @@ class _SetupScreenState extends State<SetupScreen> {
   }
 
   void _start() {
-    final names = [
-      for (var i = 0; i < _names.length; i++)
-        _names[i].text.trim().isEmpty ? _nicknames[i] : _names[i].text.trim(),
-    ];
+    final names = sanitizeNames([for (final c in _names) c.text], _defaults);
+    final isDefault = _listEquals(names, _defaults.take(names.length).toList());
+    SettingsScope.of(context).saveSetup(
+      widget.mode,
+      SetupMemory(
+        names: isDefault ? null : names,
+        rounds: _rounds,
+        seconds: _seconds,
+      ),
+    );
     final game = Game(
       GameConfig(
         mode: widget.mode,
         names: names,
         rounds: _rounds,
         seconds: _seconds,
+        languageCode: _content.code,
       ),
     );
     Navigator.of(context)
         .pushReplacement(fadeSlideRoute(GameScreen(game: game)));
   }
 
+  bool _listEquals(List<String> a, List<String> b) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return GradientScaffold(
-      title: _competitive ? 'Rekabetçi mod' : 'Klasik mod',
+      title: _competitive ? l10n.setupCompetitiveTitle : l10n.setupClassicTitle,
       body: Column(
         children: [
           Expanded(
@@ -89,7 +134,7 @@ class _SetupScreenState extends State<SetupScreen> {
                     children: [
                       _Heading(
                         emoji: _competitive ? '🛡️' : '👥',
-                        text: _competitive ? 'Takımlar' : 'Oyuncular',
+                        text: _competitive ? l10n.teams : l10n.players,
                       ),
                       const SizedBox(height: 12),
                       for (var i = 0; i < _names.length; i++)
@@ -106,14 +151,16 @@ class _SetupScreenState extends State<SetupScreen> {
                                 child: TextField(
                                   controller: _names[i],
                                   maxLength: 16,
+                                  textCapitalization: TextCapitalization.words,
                                   style: AppText.display(17),
                                   decoration: InputDecoration(
-                                    hintText: '$_unit ${i + 1}',
+                                    hintText: _defaults[i % _defaults.length],
                                     counterText: '',
                                   ),
                                 ),
                               ),
                               IconButton(
+                                tooltip: l10n.removeEntry,
                                 onPressed: _names.length > 2
                                     ? () => _remove(i)
                                     : null,
@@ -129,7 +176,7 @@ class _SetupScreenState extends State<SetupScreen> {
                             onPressed: _add,
                             icon: const Icon(Icons.add_circle_outline),
                             label: Text(
-                              '$_unit ekle',
+                              _competitive ? l10n.addTeam : l10n.addPlayer,
                               style: AppText.display(
                                 16,
                                 color: AppColors.yellow,
@@ -145,10 +192,10 @@ class _SetupScreenState extends State<SetupScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _Heading(emoji: '🔁', text: 'Tur sayısı: $_rounds'),
+                      _Heading(emoji: '🔁', text: l10n.roundsLabel(_rounds)),
                       const SizedBox(height: 2),
                       Text(
-                        'Herkes $_rounds kez sahneye çıkar.',
+                        l10n.roundsHint(_rounds),
                         style: const TextStyle(
                           color: Colors.white60,
                           fontSize: 13,
@@ -163,16 +210,18 @@ class _SetupScreenState extends State<SetupScreen> {
                         onChanged: (v) => setState(() => _rounds = v.round()),
                       ),
                       const SizedBox(height: 4),
-                      const _Heading(emoji: '⏱️', text: 'Süre'),
+                      _Heading(emoji: '⏱️', text: l10n.timeLabel),
                       const SizedBox(height: 10),
                       SizedBox(
                         width: double.infinity,
                         child: SegmentedButton<int>(
                           showSelectedIcon: false,
-                          segments: const [
-                            ButtonSegment(value: 30, label: Text('30 sn')),
-                            ButtonSegment(value: 60, label: Text('60 sn')),
-                            ButtonSegment(value: 90, label: Text('90 sn')),
+                          segments: [
+                            for (final s in const [30, 60, 90])
+                              ButtonSegment(
+                                value: s,
+                                label: Text(l10n.secondsShort(s)),
+                              ),
                           ],
                           selected: {_seconds},
                           onSelectionChanged: (s) =>
@@ -199,7 +248,7 @@ class _SetupScreenState extends State<SetupScreen> {
               ),
             ),
             child: BigButton(
-              label: 'Perde açılsın!',
+              label: l10n.startGame,
               icon: Icons.play_arrow_rounded,
               onPressed: _start,
               colors: const [AppColors.green, AppColors.greenDark],
@@ -224,7 +273,7 @@ class _Heading extends StatelessWidget {
       children: [
         Text(emoji, style: const TextStyle(fontSize: 22)),
         const SizedBox(width: 8),
-        Text(text, style: AppText.display(20)),
+        Flexible(child: Text(text, style: AppText.display(20))),
       ],
     );
   }

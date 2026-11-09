@@ -91,7 +91,17 @@ class _GradientScaffoldState extends State<GradientScaffold>
                 padding: EdgeInsets.only(
                   top: title == null ? 0 : kToolbarHeight,
                 ),
-                child: widget.body,
+                // Geniş ekranlarda (web, tablet) içerik ortalanır, telefon genişliğinde kalır.
+                child: LayoutBuilder(
+                  builder: (context, box) => Align(
+                    alignment: Alignment.topCenter,
+                    child: SizedBox(
+                      width: min(box.maxWidth, 560),
+                      height: box.maxHeight,
+                      child: widget.body,
+                    ),
+                  ),
+                ),
               ),
             ),
           ],
@@ -198,6 +208,22 @@ class _SprinklePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_SprinklePainter old) => old.t != t;
+}
+
+/// İçeriği ekrana yayar; sığmazsa kaydırılabilir hâle getirir (küçük ekranlar,
+/// büyük yazı boyutu). İçindeki `Spacer`lar yer varken esner, yer yoksa kapanır.
+class FillRemainingScroll extends StatelessWidget {
+  const FillRemainingScroll({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomScrollView(
+      physics: const ClampingScrollPhysics(),
+      slivers: [SliverFillRemaining(hasScrollBody: false, child: child)],
+    );
+  }
 }
 
 /// Camsı, yarı saydam içerik paneli.
@@ -580,46 +606,58 @@ class GameCard extends StatelessWidget {
                   ),
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(26, 22, 26, 22),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text(label, style: corner),
-                    Expanded(
-                      child: Center(
-                        child: FittedBox(
-                          fit: BoxFit.scaleDown,
-                          child: ConstrainedBox(
-                            constraints: const BoxConstraints(maxWidth: 270),
-                            child: Text(
-                              text,
-                              textAlign: TextAlign.center,
-                              style: AppText.display(
-                                textSize,
-                                height: 1.12,
-                                shadows: const [
-                                  Shadow(
-                                    color: Colors.black38,
-                                    offset: Offset(0, 3),
-                                    blurRadius: 2,
+              // Kart alçalırsa (küçük ekran, büyük yazı) boşluklar daralır ve alttaki
+              // ters etiket gizlenir; böylece içerik taşmaz.
+              LayoutBuilder(
+                builder: (context, box) {
+                  final compact = box.maxHeight < 200;
+                  return Padding(
+                    padding: compact
+                        ? const EdgeInsets.fromLTRB(22, 12, 22, 10)
+                        : const EdgeInsets.fromLTRB(26, 22, 26, 22),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(label, style: corner),
+                        Expanded(
+                          child: Center(
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: ConstrainedBox(
+                                constraints: const BoxConstraints(
+                                  maxWidth: 270,
+                                ),
+                                child: Text(
+                                  text,
+                                  textAlign: TextAlign.center,
+                                  style: AppText.display(
+                                    textSize,
+                                    height: 1.12,
+                                    shadows: const [
+                                      Shadow(
+                                        color: Colors.black38,
+                                        offset: Offset(0, 3),
+                                        blurRadius: 2,
+                                      ),
+                                    ],
                                   ),
-                                ],
+                                ),
                               ),
                             ),
                           ),
                         ),
-                      ),
+                        if (!compact)
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: Transform.rotate(
+                              angle: pi,
+                              child: Text(label, style: corner),
+                            ),
+                          ),
+                      ],
                     ),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: Transform.rotate(
-                        angle: pi,
-                        child: Text(label, style: corner),
-                      ),
-                    ),
-                  ],
-                ),
+                  );
+                },
               ),
             ],
           ),

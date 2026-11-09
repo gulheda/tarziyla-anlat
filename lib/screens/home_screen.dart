@@ -2,12 +2,13 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 
-import '../data/cards.dart';
-import '../data/funny.dart';
+import '../data/contents.dart';
+import '../l10n/app_localizations.dart';
 import '../logic/game.dart';
 import '../ui/theme.dart';
 import '../ui/widgets.dart';
 import 'how_to_screen.dart';
+import 'settings_screen.dart';
 import 'setup_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -18,7 +19,9 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
-  final String _tagline = taglines[Random().nextInt(taglines.length)];
+  final Random _random = Random();
+  String? _taglineLanguage;
+  String _tagline = '';
 
   late final AnimationController _entrance = AnimationController(
     vsync: this,
@@ -65,127 +68,165 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final code = Localizations.localeOf(context).languageCode;
+    final content = contentFor(code);
+    if (_taglineLanguage != code) {
+      _taglineLanguage = code;
+      _tagline = content.taglines[_random.nextInt(content.taglines.length)];
+    }
+
     return GradientScaffold(
-      body: LayoutBuilder(
-        builder: (context, constraints) => SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: ConstrainedBox(
-            constraints: BoxConstraints(minHeight: constraints.maxHeight - 48),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                _stagger(
-                  0.0,
-                  0.4,
-                  AnimatedBuilder(
-                    animation: _bob,
-                    builder: (context, child) => Transform.translate(
-                      offset: Offset(0, sin(_bob.value * pi) * -8),
-                      child: child,
-                    ),
-                    child: const _Emblem(),
-                  ),
+      body: Stack(
+        children: [
+          LayoutBuilder(
+            builder: (context, constraints) => SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight: constraints.maxHeight - 48,
                 ),
-                const SizedBox(height: 18),
-                _stagger(
-                  0.12,
-                  0.5,
-                  Text(
-                    appName.toUpperCase(),
-                    textAlign: TextAlign.center,
-                    style: AppText.display(
-                      40,
-                      letterSpacing: 1.5,
-                      shadows: const [
-                        Shadow(color: AppColors.pink, offset: Offset(0, 5)),
-                        Shadow(
-                          color: Colors.black38,
-                          offset: Offset(0, 9),
-                          blurRadius: 10,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const SizedBox(height: 28),
+                    _stagger(
+                      0.0,
+                      0.4,
+                      AnimatedBuilder(
+                        animation: _bob,
+                        builder: (context, child) => Transform.translate(
+                          offset: Offset(0, sin(_bob.value * pi) * -8),
+                          child: child,
                         ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                _stagger(
-                  0.22,
-                  0.6,
-                  Column(
-                    children: [
-                      Text(
-                        _tagline,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          color: Colors.white70,
-                          fontSize: 16,
-                        ),
+                        child: const _Emblem(),
                       ),
-                      const SizedBox(height: 12),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.yellow.withValues(alpha: 0.16),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(
-                            color: AppColors.yellow.withValues(alpha: 0.4),
+                    ),
+                    const SizedBox(height: 18),
+                    _stagger(
+                      0.12,
+                      0.5,
+                      Semantics(
+                        header: true,
+                        child: Text(
+                          l10n.appName.toUpperCase(),
+                          textAlign: TextAlign.center,
+                          style: AppText.display(
+                            40,
+                            letterSpacing: 1.5,
+                            shadows: const [
+                              Shadow(
+                                color: AppColors.pink,
+                                offset: Offset(0, 5),
+                              ),
+                              Shadow(
+                                color: Colors.black38,
+                                offset: Offset(0, 9),
+                                blurRadius: 10,
+                              ),
+                            ],
                           ),
                         ),
-                        child: Text(
-                          '🃏 $totalAnlatCount kelime · ${tarzCards.length} tarz',
-                          style: AppText.display(14, color: AppColors.yellow),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    _stagger(
+                      0.22,
+                      0.6,
+                      Column(
+                        children: [
+                          Text(
+                            _tagline,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 16,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.yellow.withValues(alpha: 0.16),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: AppColors.yellow.withValues(alpha: 0.4),
+                              ),
+                            ),
+                            child: Text(
+                              '🃏 ${l10n.homeCounts(content.words.length, content.styles.length)}',
+                              style: AppText.display(
+                                14,
+                                color: AppColors.yellow,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 34),
+                    _stagger(
+                      0.38,
+                      0.75,
+                      _ModeTile(
+                        emoji: '🎉',
+                        title: l10n.homeClassic,
+                        subtitle: l10n.homeClassicDesc,
+                        colors: const [AppColors.pink, AppColors.orange],
+                        onTap: () => _open(GameMode.classic),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    _stagger(
+                      0.5,
+                      0.87,
+                      _ModeTile(
+                        emoji: '⚡',
+                        title: l10n.homeCompetitive,
+                        subtitle: l10n.homeCompetitiveDesc,
+                        colors: const [AppColors.blue, AppColors.cyan],
+                        onTap: () => _open(GameMode.competitive),
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+                    _stagger(
+                      0.7,
+                      1.0,
+                      TextButton.icon(
+                        onPressed: () =>
+                            Navigator.of(context)
+                                .push(fadeSlideRoute(const HowToScreen())),
+                        icon: const Icon(
+                          Icons.help_outline,
+                          color: Colors.white70,
+                        ),
+                        label: Text(
+                          l10n.homeHowTo,
+                          style: AppText.display(16, color: Colors.white70),
                         ),
                       ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 34),
-                _stagger(
-                  0.38,
-                  0.75,
-                  _ModeTile(
-                    emoji: '🎉',
-                    title: 'Klasik',
-                    subtitle: 'Rahat parti modu.\nBilen ve anlatan puan alır.',
-                    colors: const [AppColors.pink, AppColors.orange],
-                    onTap: () => _open(GameMode.classic),
-                  ),
-                ),
-                const SizedBox(height: 14),
-                _stagger(
-                  0.5,
-                  0.87,
-                  _ModeTile(
-                    emoji: '⚡',
-                    title: 'Rekabetçi',
-                    subtitle: 'Takımlar sayaca karşı yarışır.\nBildikçe puan.',
-                    colors: const [AppColors.blue, AppColors.cyan],
-                    onTap: () => _open(GameMode.competitive),
-                  ),
-                ),
-                const SizedBox(height: 18),
-                _stagger(
-                  0.7,
-                  1.0,
-                  TextButton.icon(
-                    onPressed: () =>
-                        Navigator.of(context)
-                            .push(fadeSlideRoute(const HowToScreen())),
-                    icon: const Icon(Icons.help_outline, color: Colors.white70),
-                    label: Text(
-                      'Nasıl oynanır?',
-                      style: AppText.display(16, color: Colors.white70),
                     ),
-                  ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
-        ),
+          Positioned(
+            top: 4,
+            right: 8,
+            child: IconButton(
+              tooltip: l10n.settings,
+              icon: const Icon(Icons.settings_outlined, color: Colors.white70),
+              onPressed: () =>
+                  Navigator.of(context)
+                      .push(fadeSlideRoute(const SettingsScreen())),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -197,58 +238,60 @@ class _Emblem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 150,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          Transform.translate(
-            offset: const Offset(-34, 8),
-            child: Transform.rotate(
-              angle: -0.24,
-              child: const _MiniCard(
-                colors: [AppColors.pink, AppColors.orange],
-                icon: Icons.record_voice_over,
-              ),
-            ),
-          ),
-          Transform.translate(
-            offset: const Offset(34, -2),
-            child: Transform.rotate(
-              angle: 0.2,
-              child: const _MiniCard(
-                colors: [AppColors.blue, AppColors.cyan],
-                icon: Icons.theater_comedy,
-              ),
-            ),
-          ),
-          Positioned(
-            top: 4,
-            child: Transform.translate(
-              offset: const Offset(70, 0),
-              child: Container(
-                width: 38,
-                height: 38,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: AppColors.yellow,
-                  border: Border.all(color: Colors.white, width: 3),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.yellow.withValues(alpha: 0.6),
-                      blurRadius: 14,
-                    ),
-                  ],
-                ),
-                child: Text(
-                  '!',
-                  style: AppText.display(24, color: AppColors.ink),
+    return ExcludeSemantics(
+      child: SizedBox(
+        height: 150,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            Transform.translate(
+              offset: const Offset(-34, 8),
+              child: Transform.rotate(
+                angle: -0.24,
+                child: const _MiniCard(
+                  colors: [AppColors.pink, AppColors.orange],
+                  icon: Icons.record_voice_over,
                 ),
               ),
             ),
-          ),
-        ],
+            Transform.translate(
+              offset: const Offset(34, -2),
+              child: Transform.rotate(
+                angle: 0.2,
+                child: const _MiniCard(
+                  colors: [AppColors.blue, AppColors.cyan],
+                  icon: Icons.theater_comedy,
+                ),
+              ),
+            ),
+            Positioned(
+              top: 4,
+              child: Transform.translate(
+                offset: const Offset(70, 0),
+                child: Container(
+                  width: 38,
+                  height: 38,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: AppColors.yellow,
+                    border: Border.all(color: Colors.white, width: 3),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.yellow.withValues(alpha: 0.6),
+                        blurRadius: 14,
+                      ),
+                    ],
+                  ),
+                  child: Text(
+                    '!',
+                    style: AppText.display(24, color: AppColors.ink),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -307,63 +350,69 @@ class _ModeTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final radius = BorderRadius.circular(26);
-    return PressableScale(
+    return Semantics(
+      button: true,
+      label: '$title. ${subtitle.replaceAll('\n', ' ')}',
+      excludeSemantics: true,
       onTap: onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: radius,
-          gradient: LinearGradient(
-            colors: colors,
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          border: Border.all(
-            color: Colors.white.withValues(alpha: 0.4),
-            width: 2,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Color.lerp(colors.first, Colors.black, 0.55)!,
-              offset: const Offset(0, 7),
+      child: PressableScale(
+        onTap: onTap,
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: radius,
+            gradient: LinearGradient(
+              colors: colors,
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
-            BoxShadow(
-              color: colors.last.withValues(alpha: 0.3),
-              blurRadius: 20,
-              offset: const Offset(0, 10),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.4),
+              width: 2,
             ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: radius,
-          child: Stack(
-            children: [
-              Positioned(
-                right: -6,
-                bottom: -16,
-                child: Transform.rotate(
-                  angle: 0.2,
-                  child: Text(emoji, style: const TextStyle(fontSize: 92)),
-                ),
+            boxShadow: [
+              BoxShadow(
+                color: Color.lerp(colors.first, Colors.black, 0.55)!,
+                offset: const Offset(0, 7),
               ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 18, 96, 18),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(title, style: AppText.display(28)),
-                    const SizedBox(height: 4),
-                    Text(
-                      subtitle,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 14,
-                        height: 1.3,
-                      ),
-                    ),
-                  ],
-                ),
+              BoxShadow(
+                color: colors.last.withValues(alpha: 0.3),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
               ),
             ],
+          ),
+          child: ClipRRect(
+            borderRadius: radius,
+            child: Stack(
+              children: [
+                Positioned(
+                  right: -6,
+                  bottom: -16,
+                  child: Transform.rotate(
+                    angle: 0.2,
+                    child: Text(emoji, style: const TextStyle(fontSize: 92)),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 18, 96, 18),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(title, style: AppText.display(28)),
+                      const SizedBox(height: 4),
+                      Text(
+                        subtitle,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          height: 1.3,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

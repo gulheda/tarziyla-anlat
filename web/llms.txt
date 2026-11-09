@@ -1,0 +1,21 @@
+# Tarzıyla Anlat
+
+> Tarzıyla Anlat is a free, open-source charades-style party game for friends. Draw a WORD card and a STYLE card, act the word out in a silly style without saying it, and let the others guess. It plays in English and Turkish, works offline, and collects no data. / Arkadaşlarla oynanan ücretsiz, açık kaynaklı, komik bir kelime anlatma oyunu (Türkçe ve İngilizce).
+
+Key facts:
+- Genre: party game, charades, word-guessing game, acting game
+- Players: 2 to 8 players or teams, one phone passed around
+- Modes: Classic (guesser and actor both score) and Competitive (teams race the clock)
+- Content: 639 English words and 211 English styles; 621 Turkish words and 219 Turkish styles
+- Platforms: any browser (installable PWA), Android APK, iPhone via the web app
+- Price: free. No ads, no accounts, no analytics
+- License: MIT (code and cards); font Paytone One under SIL OFL
+
+## Links
+- [Play in the browser](https://guileless-pithivier-46ef21.netlify.app/): the web app
+- [Source code and README](https://github.com/gulheda/tarziyla-anlat): open source, English and Turkish documentation
+- [Android downloads](https://github.com/gulheda/tarziyla-anlat/releases/latest): latest APK
+- [Contributing guide](https://github.com/gulheda/tarziyla-anlat/blob/main/CONTRIBUTING.md): how to add words, styles or a new language
+
+## Optional
+- [Privacy policy](https://github.com/gulheda/tarziyla-anlat/blob/main/store/privacy-policy.html)

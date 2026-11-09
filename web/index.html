@@ -1,49 +1,119 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 <head>
-  <!--
-    If you are serving your web app in a path other than the root, change the
-    href value below to reflect the base path you are serving from.
-
-    The path provided below has to start and end with a slash "/" in order for
-    it to work correctly.
-
-    For more details:
-    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
-
-    This is a placeholder for base href that will be replaced by the value of
-    the `--base-href` argument provided to `flutter build`.
-  -->
   <base href="$FLUTTER_BASE_HREF">
-
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="Tarzıyla Anlat: konuyu çek, tarzı çek, kelimeyi söylemeden anlat!">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 
-  <!-- iOS meta tags & icons -->
+  <!-- Search engines: English first, Turkish second (the game plays in both). -->
+  <title>Tarzıyla Anlat: Free Funny Charades Party Game (English &amp; Türkçe)</title>
+  <meta name="description" content="Tarzıyla Anlat is a free, open-source charades-style party game. Draw a WORD card and a STYLE card, act the word out in a silly style and let your friends guess. No ads, no sign-up. Türkçe ve İngilizce: kelimeyi çek, tarzı çek, anlat!">
+  <meta name="keywords" content="charades, party game, word guessing game, acting game, friends game, group game, funny game, open source game, free game, kelime anlatma oyunu, parti oyunu, arkadaş oyunu, tahmin oyunu, sessiz sinema, mim oyunu, Tarzıyla Anlat">
+  <meta name="robots" content="index, follow, max-image-preview:large">
+  <meta name="author" content="gulheda">
+  <link rel="canonical" href="https://guileless-pithivier-46ef21.netlify.app/">
+  <link rel="alternate" hreflang="en" href="https://guileless-pithivier-46ef21.netlify.app/">
+  <link rel="alternate" hreflang="tr" href="https://guileless-pithivier-46ef21.netlify.app/">
+  <link rel="alternate" hreflang="x-default" href="https://guileless-pithivier-46ef21.netlify.app/">
+
+  <!-- Social sharing -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Tarzıyla Anlat">
+  <meta property="og:title" content="Tarzıyla Anlat: free funny charades party game">
+  <meta property="og:description" content="Pick a word, pick a style, make a fool of yourself! Plays in English and Türkçe. Free and open source. / Kelimeyi çek, tarzı çek, rezil ol!">
+  <meta property="og:url" content="https://guileless-pithivier-46ef21.netlify.app/">
+  <meta property="og:image" content="https://guileless-pithivier-46ef21.netlify.app/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Tarzıyla Anlat: a WORD card and a STYLE card">
+  <meta property="og:locale" content="en_US">
+  <meta property="og:locale:alternate" content="tr_TR">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Tarzıyla Anlat: free funny charades party game">
+  <meta name="twitter:description" content="Pick a word, pick a style, make a fool of yourself! English and Türkçe, free and open source.">
+  <meta name="twitter:image" content="https://guileless-pithivier-46ef21.netlify.app/og-image.png">
+
+  <!-- Structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "VideoGame",
+    "name": "Tarzıyla Anlat",
+    "alternateName": "Tarziyla Anlat",
+    "url": "https://guileless-pithivier-46ef21.netlify.app/",
+    "description": "A free, open-source charades-style party game. Draw a WORD card and a STYLE card, act the word out in a silly style and let your friends guess. Plays in English and Turkish. / Ücretsiz, açık kaynaklı, komik bir kelime anlatma oyunu.",
+    "image": "https://guileless-pithivier-46ef21.netlify.app/og-image.png",
+    "genre": ["Party game", "Word game", "Charades", "Guessing game"],
+    "applicationCategory": "GameApplication",
+    "gamePlatform": ["Web browser", "Android", "iOS"],
+    "operatingSystem": "Any",
+    "playMode": "MultiPlayer",
+    "numberOfPlayers": { "@type": "QuantitativeValue", "minValue": 2, "maxValue": 8 },
+    "inLanguage": ["en", "tr"],
+    "isAccessibleForFree": true,
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+    "license": "https://opensource.org/licenses/MIT",
+    "codeRepository": "https://github.com/gulheda/tarziyla-anlat",
+    "author": { "@type": "Person", "name": "gulheda", "url": "https://github.com/gulheda" }
+  }
+  </script>
+
+  <!-- iOS / PWA -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="theme-color" content="#1A0B3F">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <meta name="apple-mobile-web-app-title" content="Tarzıyla Anlat">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
-
-  <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon.png"/>
-
-  <title>Tarzıyla Anlat</title>
   <link rel="manifest" href="manifest.json">
-  <style>html,body{margin:0;height:100%;background:#1A0B3F;}</style>
+
+  <style>
+    html, body { margin: 0; height: 100%; background: #1A0B3F; }
+    /* Shown to search engines and while the app loads; removed once the game is ready. */
+    #seo {
+      position: fixed; inset: 0; z-index: 1; overflow: auto;
+      color: #fff; font-family: -apple-system, system-ui, "Segoe UI", Roboto, sans-serif;
+      background: linear-gradient(135deg, #1A0B3F, #4B1D8F);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 24px; text-align: center; line-height: 1.5;
+    }
+    #seo h1 { font-size: 2.2rem; margin: 0 0 .4rem; }
+    #seo h2 { font-size: 1.05rem; font-weight: 600; margin: 1.1rem 0 .3rem; color: #FFD84D; }
+    #seo p, #seo li { max-width: 34rem; margin: .2rem auto; color: #ddd; }
+    #seo ul { list-style: none; padding: 0; margin: .4rem 0; }
+    #seo a { color: #FFD84D; }
+    #seo .loading { margin-top: 1.2rem; opacity: .7; font-size: .9rem; }
+  </style>
 </head>
 <body>
-  <!--
-    You can customize the "flutter_bootstrap.js" script.
-    This is useful to provide a custom configuration to the Flutter loader
-    or to give the user feedback during the initialization process.
-
-    For more details:
-    * https://docs.flutter.dev/platform-integration/web/initialization
-  -->
+  <main id="seo">
+    <h1>Tarzıyla Anlat</h1>
+    <p><strong>A free, funny charades-style party game for friends.</strong> Draw a WORD card and a STYLE card,
+       act the word out without saying it (&ldquo;Penguin&rdquo; + &ldquo;Talk like your grandma&rdquo;) and let everyone guess.
+       Plays in English and Türkçe. No ads, no sign-up, open source.</p>
+    <p><strong>Arkadaşlarla oynanan ücretsiz, komik bir kelime anlatma oyunu.</strong> Kelime kartını ve tarz kartını çek,
+       kelimeyi söylemeden anlat (&ldquo;Penguen&rdquo; + &ldquo;Nenen gibi konuş&rdquo;), herkes tahmin etsin.
+       Türkçe ve İngilizce oynanır. Reklam yok, hesap yok, açık kaynak.</p>
+    <h2>Features / Özellikler</h2>
+    <ul>
+      <li>2 to 8 players or teams / 2 ile 8 oyuncu ya da takım</li>
+      <li>Classic and competitive modes / Klasik ve rekabetçi mod</li>
+      <li>600+ words and 200+ styles in each language / Her dilde 600+ kelime, 200+ tarz</li>
+      <li>Works offline on Android, iOS and the web / Android, iOS ve web</li>
+    </ul>
+    <p><a href="https://github.com/gulheda/tarziyla-anlat">Source code &amp; Android download / Kaynak kod ve Android indirme</a></p>
+    <p class="loading">Loading the game&hellip; / Oyun yükleniyor&hellip;</p>
+  </main>
+  <script>
+    // Flutter, ilk kareyi çizince arama motoru içeriği (yükleme ekranı) kaldırılır.
+    (function () {
+      var remove = function () { var el = document.getElementById('seo'); if (el) el.remove(); };
+      window.addEventListener('flutter-first-frame', remove);
+      setTimeout(remove, 15000);
+    })();
+  </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

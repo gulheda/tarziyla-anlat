@@ -1,0 +1,188 @@
+{
+  "@@locale": "en",
+  "appName": "Tarzıyla Anlat",
+  "homeClassic": "Classic",
+  "homeClassicDesc": "Relaxed party mode.\nThe guesser and the actor both score.",
+  "homeCompetitive": "Competitive",
+  "homeCompetitiveDesc": "Teams race the clock.\nScore for every guess.",
+  "homeHowTo": "How to play?",
+  "homeCounts": "{words} words · {styles} styles",
+  "@homeCounts": {
+    "placeholders": {
+      "words": {
+        "type": "int"
+      },
+      "styles": {
+        "type": "int"
+      }
+    }
+  },
+  "settings": "Settings",
+  "howToTitle": "How to play",
+  "howTo1Title": "Grab the phone",
+  "howTo1Body": "The player whose turn it is takes the phone. Everyone else looks away, peeking ruins the fun.",
+  "howTo2Title": "Draw two cards",
+  "howTo2Body": "The WORD card says what to act out, the STYLE card says how. For example \"Penguin\" + \"Talk like your grandma\".",
+  "howTo3Title": "Make a fool of yourself",
+  "howTo3Body": "Describe the word without saying it, staying true to your style. The others guess.",
+  "howTo4Title": "Collect points",
+  "howTo4Body": "In Classic mode the guesser and the actor each get a point. In Competitive mode you describe as many cards as you can before time runs out, one point each.",
+  "howTo5Title": "A winner is crowned",
+  "howTo5Body": "When all rounds are done, the highest score wins. The last place gets the stage fright award.",
+  "howTo6Title": "Swipe to play",
+  "howTo6Body": "Swipe the cards right for \"Got it\" or left for \"Pass\". The buttons work too.",
+  "setupClassicTitle": "Classic mode",
+  "setupCompetitiveTitle": "Competitive mode",
+  "players": "Players",
+  "teams": "Teams",
+  "addPlayer": "Add player",
+  "addTeam": "Add team",
+  "removeEntry": "Remove",
+  "roundsLabel": "Rounds: {n}",
+  "@roundsLabel": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "roundsHint": "{n, plural, =1{Everyone performs once.} other{Everyone performs {n} times.}}",
+  "@roundsHint": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "timeLabel": "Time",
+  "secondsShort": "{n} s",
+  "@secondsShort": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "startGame": "Start the show!",
+  "labelWord": "WORD",
+  "labelStyle": "STYLE",
+  "roundBadge": "ROUND {n} / {total}",
+  "@roundBadge": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "secondsToGo": "{n, plural, =1{⏱️ 1 second to go} other{⏱️ {n} seconds to go}}",
+  "@secondsToGo": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "passButton": "Pass ({n})",
+  "@passButton": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "swapButton": "Swap ({n})",
+  "@swapButton": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "gotItButton": "Got it!",
+  "giveUp": "Give up, nobody got it",
+  "swipeGotIt": "GOT IT!",
+  "swipePass": "PASS",
+  "paused": "Paused",
+  "pausedHint": "The clock is stopped. Tap to continue.",
+  "resumeButton": "Resume",
+  "pauseTimerHint": "Tap the timer to pause",
+  "timeUp": "Time's up!",
+  "roundOver": "Round over",
+  "gotItTitle": "Got it!",
+  "cardsGuessed": "{n, plural, =1{card guessed} other{cards guessed}}",
+  "@cardsGuessed": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "whoGuessed": "Who guessed it?",
+  "nextUp": "Next: {name}",
+  "@nextUp": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "seeResults": "See results",
+  "winnerTitle": "{name} wins!",
+  "@winnerTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "tieTitle": "It's a tie!",
+  "playAgain": "Play again",
+  "mainMenu": "Main menu",
+  "pointsLabel": "{n, plural, =1{1 pt} other{{n} pts}}",
+  "@pointsLabel": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "exitTitle": "Leaving the stage?",
+  "exitBody": "If you leave, the scores are lost.",
+  "keepPlaying": "Keep playing",
+  "leave": "Leave",
+  "settingsLanguage": "Language",
+  "languageSystem": "System default",
+  "settingsVibration": "Vibration",
+  "settingsVibrationDesc": "Short buzzes on taps and in the last seconds.",
+  "settingsAbout": "About",
+  "settingsAboutBody": "A free, open-source party game. No ads, no accounts, no data collected.",
+  "settingsSource": "Source code on GitHub",
+  "settingsLicenses": "Open-source licenses",
+  "settingsVersion": "Version {version}",
+  "@settingsVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "semanticsTimer": "{n} seconds left",
+  "@semanticsTimer": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "semanticsScore": "{n, plural, =1{1 correct} other{{n} correct}}",
+  "@semanticsScore": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  }
+}

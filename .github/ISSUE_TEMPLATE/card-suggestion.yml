@@ -1,0 +1,22 @@
+name: Card suggestion / Kart önerisi
+description: Suggest new words or styles (any language).
+labels: [cards]
+body:
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What are you suggesting?
+      options: [Words (single words), Styles ("Talk like..."), Funny messages, A new language]
+    validations: { required: true }
+  - type: dropdown
+    id: language
+    attributes:
+      label: Language
+      options: [English, Türkçe, Another language]
+    validations: { required: true }
+  - type: textarea
+    id: cards
+    attributes:
+      label: Your cards (one per line)
+      description: Words must be a single word. Styles should be short and funny.
+    validations: { required: true }
