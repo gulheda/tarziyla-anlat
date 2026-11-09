@@ -77,7 +77,7 @@ All cards are plain Dart lists — adding a funny style is a one-line change. Se
 The app has no network code, ads or analytics and stores only your language, vibration setting and last game setup on your device. The web version loads its own files (and the emoji font) when you open it.
 
 ### License
-Code: [MIT](LICENSE). The bundled font *Paytone One* is under the SIL Open Font License. All word and style cards are original; you may reuse them under the same MIT license.
+Code: [MIT](LICENSE). The bundled font *Paytone One* is under the SIL Open Font License (see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)). All word and style cards are original; you may reuse them under the same MIT license.
 
 ---
 
